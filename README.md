@@ -1,7 +1,9 @@
 # Tunnel
 Simple command-line peer-to-peer file transfer using WebRTC.
 
-https://github.com/user-attachments/assets/64ca9bea-b3cf-4de3-bd44-f17d4e99243a
+
+https://github.com/user-attachments/assets/0c050d0f-60a5-4edb-9e45-0c496d95526e
+
 
 ## Features
 - Auto-zipping and unzipping when directory or multiple files are selected as input.

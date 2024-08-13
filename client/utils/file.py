@@ -13,11 +13,18 @@ def compress_files(input_files_or_dirs: List[str], output_file: str) -> None:
             if os.path.isfile(item):
                 zipf.write(item, os.path.basename(item))
             elif os.path.isdir(item):
-                for root, _, files in os.walk(item):
+                for root, dirs, files in os.walk(item):
+                    if not files and not dirs:
+                        folder_path = os.path.relpath(root, start=os.path.dirname(item))
+                        zipf.write(root, folder_path + '/')
                     for file in files:
                         file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, start=item)
+                        arcname = os.path.relpath(file_path, start=os.path.dirname(item))
                         zipf.write(file_path, arcname)
+                    for directory in dirs:
+                        dir_path = os.path.join(root, directory)
+                        arcname = os.path.relpath(dir_path, start=os.path.dirname(item)) + '/'
+                        zipf.write(dir_path, arcname)
             else:
                 print(f"Warning: {item} is neither a file nor a directory, skipping.")
 
@@ -39,10 +46,10 @@ def get_file_checksum(file_path: str, algorithm: str = "sha256") -> str:
 
 
 def get_human_readable_file_size(size_bytes: int) -> str:
-    units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
     unit_index = 0
 
-    while size_bytes >= 1024 and unit_index < len(units) - 2:
+    while size_bytes >= 1024 and unit_index < len(units) - 1:
         size_bytes /= 1024.0
         unit_index += 1
 

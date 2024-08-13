@@ -1,11 +1,6 @@
 import logging
-import os
 from pathlib import Path
 from shutil import rmtree
-from typing import (
-    Dict,
-    Union,
-)
 import unittest
 
 from client.utils.communication import SessionConfig
@@ -14,6 +9,11 @@ from client.utils.file import (
     decompress_files,
     get_file_checksum,
     get_human_readable_file_size,
+)
+from tests.helpers import (
+    FileStructure,
+    create_file_structure,
+    get_directory_structure,
 )
 
 
@@ -61,13 +61,11 @@ class UtilsTests(unittest.TestCase):
 
         self.assertEqual(checksum, get_file_checksum(self.__SMALL_FILENAME_FOR_CHECKSUM))
 
-
     def test_large_file_checksum(self) -> None:
         self.assertEqual("ab0ab0ef726148f063b60a61ccc71dd0bab277ef39805b625fafd30611d3966a", get_file_checksum("../docs/preview.mp4"))
 
-
     def test_compression_flow(self) -> None:
-        file_structure = {
+        file_structure: FileStructure = {
             "a": {
                 "b": "bb",
                 "c": "uasfhasyfg",
@@ -76,44 +74,15 @@ class UtilsTests(unittest.TestCase):
             "e": {},
         }
 
-        self.__create_file_structure(self.__COMPRESSION_TEST_INPUT_DIRNAME, file_structure)
+        create_file_structure(self.__COMPRESSION_TEST_INPUT_DIRNAME, file_structure)
 
         # sanity check
-        self.assertEqual(file_structure, self.__get_directory_structure(self.__COMPRESSION_TEST_INPUT_DIRNAME))
+        self.assertEqual(file_structure, get_directory_structure(self.__COMPRESSION_TEST_INPUT_DIRNAME))
 
         compress_files([f"{self.__COMPRESSION_TEST_INPUT_DIRNAME / key}" for key in file_structure], self.__COMPRESSION_TEST_OUTPUT_ZIPNAME)
         decompress_files(self.__COMPRESSION_TEST_OUTPUT_ZIPNAME, self.__COMPRESSION_TEST_OUTPUT_DIRNAME)
 
-        self.assertEqual(file_structure, self.__get_directory_structure(self.__COMPRESSION_TEST_OUTPUT_DIRNAME))
-
-
-    def __create_file_structure(self, base_path: Path, structure: Dict[str, Union[str, Dict]]) -> None:
-        for name, content in structure.items():
-            current_path = base_path / name
-            if isinstance(content, dict):
-                current_path.mkdir(parents=True, exist_ok=True)
-                self.__create_file_structure(current_path, content)
-            else:
-                with open(current_path, "w", encoding="utf8") as f:
-                    f.write(content)
-
-
-    def __get_directory_structure(self, base_path: Path) -> Dict[str, Union[str, Dict]]:
-        structure = {}
-        for root, dirs, files in os.walk(base_path):
-            rel_path = os.path.relpath(root, base_path)
-            if rel_path == '.':
-                rel_path = ''
-            subdir = structure
-            if rel_path:
-                for part in rel_path.split(os.sep):
-                    subdir = subdir.setdefault(part, {})
-            for file in files:
-                with open(Path(root) / file, 'r', encoding="utf8") as f:
-                    subdir[file] = f.read()
-            for directory in dirs:
-                subdir[directory] = {}
-        return structure
+        self.assertEqual(file_structure, get_directory_structure(self.__COMPRESSION_TEST_OUTPUT_DIRNAME))
 
 
 if __name__ == "__main__":
